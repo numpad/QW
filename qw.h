@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
 #define QW_KEY(a) SDL_SCANCODE_##a
 
@@ -42,6 +43,7 @@ int qw_screen(int width, int height, int fullscreen, const char *title) {
 
 	/* Try initializing SDL */
 	if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
+		IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
 		printf("SDL_Init failed! %s\n", SDL_GetError());
 		SDL_Quit();
 		return 1;
@@ -160,9 +162,9 @@ int qw_mousedown(int button) {
 }
 
 
-/*
- * DRAWING AND GRAPHICS FUNCTIONS
- */
+/**********************************\
+ * DRAWING AND GRAPHICS FUNCTIONS *
+\**********************************/
 
 /*
  * Set draw color
@@ -199,6 +201,91 @@ void qw_drawrect(int x, int y, int w, int h) {
  */
 void qw_drawline(int x1, int y1, int x2, int y2) {
 	SDL_RenderDrawLine(qw_renderer, x1, y1, x2, y2);
+}
+
+/*****************************\
+ * IMAGE LOADING AND DRAWING *
+\*****************************/
+
+/*
+ * Image holding information:
+ * - rgba texture
+ * - source rect
+ * - destination rect
+ */
+typedef struct {
+	SDL_Rect *dst,
+	         *src;
+	
+	SDL_Texture *texture;
+} qw_image;
+
+/*
+ * Loads image from filename
+ */
+SDL_Texture *qw_loadtexture(const char *fn) {
+	SDL_Surface *img_s = IMG_Load(fn);
+	/* check if image loading failed */
+	if (!img_s) {
+		printf("IMG_Load: %s\n", IMG_GetError());
+		return NULL;
+	}
+
+	SDL_Texture *img = SDL_CreateTextureFromSurface(qw_renderer, img_s);
+	SDL_FreeSurface(img_s);
+	return img;
+}
+
+/*
+ * Loads qw_image from filename
+ */
+qw_image qw_loadimage(const char *fn) {
+	qw_image img = {
+		.texture = qw_loadtexture(fn),
+		.dst = (SDL_Rect*)malloc(sizeof(SDL_Rect)),
+		.src = (SDL_Rect*)malloc(sizeof(SDL_Rect))
+	};
+
+	img.dst->x = 10;
+	img.dst->y = 10;
+	img.dst->w = 100;
+	img.dst->h = 70;
+	
+	img.src = NULL;
+
+	return img;
+}
+
+/*
+ * Draws a qw_image to the screen
+ */
+void qw_drawimage(qw_image img) {
+	SDL_RenderCopy(qw_renderer, img.texture, img.src, img.dst);
+}
+
+/*
+ * Frees resources taken by texture
+ */
+void qw_destroyimage(qw_image img) {
+	free(img.dst);
+	free(img.src);
+	SDL_DestroyTexture(img.texture);
+}
+
+/*
+ * Set image position
+ */
+void qw_setimage(qw_image img, int x, int y) {
+	img.dst->x = x;
+	img.dst->y = y;
+}
+
+/*
+ * Move image position
+ */
+void qw_moveimage(qw_image img, int dx, int dy) {
+	img.dst->x += dx;
+	img.dst->y += dy;
 }
 
 #endif
