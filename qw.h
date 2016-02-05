@@ -1,9 +1,11 @@
+/* QUICK GRAPHICS - Christian Schäl 2016 */
 #ifndef QUICK_GRAPHICS_H
 #define QUICK_GRAPHICS_H
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
 #define QW_KEY(a) SDL_SCANCODE_##a
 
@@ -38,7 +40,7 @@ void qw_quit() {
 int qw_screen(int width, int height, int fullscreen, const char *title) {
 	qw_width = width;
 	qw_height = height;
-	qw_screen_rect = (SDL_Rect) { 0, 0, qw_width, qw_height };
+	qw_screen_rect = (SDL_Rect) {0, 0, qw_width, qw_height};
 
 	/* Try initializing SDL */
 	if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
@@ -201,4 +203,82 @@ void qw_drawline(int x1, int y1, int x2, int y2) {
 	SDL_RenderDrawLine(qw_renderer, x1, y1, x2, y2);
 }
 
+/**********\
+ * IMAGES *
+\**********/
+
+typedef struct {
+	SDL_Texture *texture;
+	SDL_Rect *src,
+	         *dst;
+} qw_image;
+
+/*
+ * Loads qw_image from path
+ */
+qw_image qw_loadimage(const char *fn) {
+	SDL_Surface *img_s = IMG_Load(fn);
+	if (!img_s) {
+		printf("IMG_Load error: %s\n", IMG_GetError());
+		return (qw_image) {
+			NULL, NULL, NULL
+		};
+	}
+	
+	qw_image img = {
+		.texture = SDL_CreateTextureFromSurface(qw_renderer, img_s),
+		.src = malloc(sizeof(SDL_Rect)),
+		.dst = malloc(sizeof(SDL_Rect))
+	};
+	
+	img.src->x = 0;
+	img.src->y = 0;
+	img.src->w = img_s->w;
+	img.src->h = img_s->h;
+	
+	img.dst->x = 0;
+	img.dst->y = 0;
+	img.dst->w = img_s->w;
+	img.dst->h = img_s->h;
+
+
+	SDL_FreeSurface(img_s);
+
+	return img;
+}
+
+/*
+ * Frees all resources used by qw_image `img`
+ */
+void qw_destroyimage(qw_image img) {
+	free(img.src);
+	free(img.dst);
+	SDL_DestroyTexture(img.texture);
+}
+
+/*
+ * Draws qw_image to the screen
+ */
+void qw_drawimage(qw_image img) {
+	SDL_RenderCopy(qw_renderer, img.texture, img.src, img.dst);
+}
+
+/*
+ * Moves qw_image destination rect dx,dy pixels
+ */
+void qw_moveimage(qw_image img, int dx, int dy) {
+	img.dst->x += dx;
+	img.dst->y += dy;
+}
+
+/*
+ * Moves qw_image destination rect to coordinates x,y
+ */
+void qw_moveimage_to(qw_image img, int x, int y) {
+	img.dst->x = x;
+	img.dst->y = y;
+}
+
 #endif
+
+
