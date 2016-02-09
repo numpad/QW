@@ -20,6 +20,7 @@ Uint32 qw_mouse;
 int qw_mousex, qw_mousey, qw_mousex_last, qw_mousey_last;
 int qw_mousex_next, qw_mousey_next;
 
+unsigned long long qw_tick_count;
 int qw_is_running;
 
 /* Quits the application */
@@ -103,6 +104,7 @@ void qw_clear() {
 int qw_running() {
 	/* Give cpu some time to rest */
 	SDL_Delay(5);
+	++qw_tick_count;
 	
 	/* Handle events */
 	SDL_Event event;
@@ -184,6 +186,10 @@ typedef struct {
 	SDL_Rect *src,
 	         *dst;
 	SDL_Texture *texture;
+	
+	double angle;
+	SDL_RendererFlip flip;
+	SDL_Point center;
 } qw_image;
 
 /* Frees resources used by qw_image */
@@ -222,13 +228,21 @@ qw_image qw_loadimage(const char *fn) {
 	img.dst->w = img_s->w;
 	img.dst->h = img_s->h;
 	
+	img.angle = 0.0;
+	img.flip = SDL_FLIP_NONE;
+	img.center = (SDL_Point) {
+		.x = img.dst->w / 2,
+		.y = img.dst->h / 2
+	};
+
 	SDL_FreeSurface(img_s);
 	return img;
 }
 
 /* Draws qw_image to screen */
 void qw_drawimage(qw_image img) {
-	SDL_RenderCopy(qw_renderer, img.texture, img.src, img.dst);
+	//SDL_RenderCopy(qw_renderer, img.texture, img.src, img.dst);
+	SDL_RenderCopyEx(qw_renderer, img.texture, img.src, img.dst, img.angle, &img.center, img.flip);
 }
 
 /* Moves qw_image dst rect */
@@ -241,6 +255,40 @@ void qw_moveimage(qw_image img, int dx, int dy) {
 void qw_placeimage(qw_image img, int x, int y) {
 	img.dst->x = x;
 	img.dst->y = y;
+}
+
+/* Returns image width */
+int qw_imagewidth(qw_image img) {
+	return img.dst->w;
+}
+
+/* Returns image height */
+int qw_imageheight(qw_image img) {
+	return img.dst->h;
+}
+
+/* Rotates image in degrees */
+void qw_imagerotate(qw_image *img, double deg) {
+	img->angle += deg;
+}
+
+/* Sets image rotation in degrees */
+void qw_imagerotation(qw_image *img, double deg) {
+	img->angle = deg;
+}
+
+/* Flips image, x and y can both be either 0 or 1 */
+void qw_flipimage(qw_image *img, int x, int y) {
+	if (x)
+		img->flip ^= SDL_FLIP_HORIZONTAL;	
+	if (y)
+		img->flip ^= SDL_FLIP_VERTICAL;
+}
+
+/* Sets center point of qw_image used for rotation */
+void qw_image_setcenter(qw_image *img, int x, int y) {
+	img->center.x = x;
+	img->center.y = y;
 }
 
 #endif
