@@ -291,6 +291,5 @@ void qw_image_setcenter(qw_image *img, int x, int y) {
 	img->center.y = y;
 }
 
+/* TODO: More drawing */
 #endif
-
-
