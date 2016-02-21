@@ -1,6 +1,6 @@
 CC=gcc
 CSTD=c99
-CLIB=-lSDL2 -lm
+CLIB=-lSDL2 -lSDL2_image -lSDL2_gfx -lm
 
 input=qtest
 output=${input}

@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL2_gfxPrimitives.h>
 
 #define QW_KEY(a) SDL_SCANCODE_##a
 
@@ -22,6 +23,8 @@ int qw_mousex_next, qw_mousey_next;
 
 unsigned long long qw_tick_count;
 int qw_is_running;
+
+int qw_rgba_red, qw_rgba_green, qw_rgba_blue, qw_rgba_alpha;
 
 /* Quits the application */
 void qw_quit() {
@@ -147,6 +150,10 @@ int qw_mousedown(int button) {
 
 /* Set draw color */
 void qw_color(Uint8 r, Uint8 g, Uint8 b, Uint8 a) {
+	qw_rgba_red = r;
+	qw_rgba_green = g;
+	qw_rgba_blue = b;
+	qw_rgba_alpha = a;
 	SDL_SetRenderDrawColor(qw_renderer, r, g, b, a);
 }
 
@@ -289,6 +296,15 @@ void qw_flipimage(qw_image *img, int x, int y) {
 void qw_image_setcenter(qw_image *img, int x, int y) {
 	img->center.x = x;
 	img->center.y = y;
+}
+
+/*
+ * GFX PRIMITIVES
+ */
+
+/* Writes string to x,y */
+void qw_write(const char *str, int x, int y) {
+	stringRGBA(qw_renderer, x, y, str, qw_rgba_red, qw_rgba_green, qw_rgba_blue, qw_rgba_alpha);
 }
 
 #endif
