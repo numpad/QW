@@ -29,7 +29,7 @@ int qw_rgba_red, qw_rgba_green, qw_rgba_blue, qw_rgba_alpha;
 /* Quits the application */
 void qw_quit() {
 	qw_is_running = 0;
-
+	
 	SDL_DestroyRenderer(qw_renderer);
 	SDL_DestroyWindow(qw_window);
 	SDL_Quit();
@@ -296,6 +296,26 @@ void qw_flipimage(qw_image *img, int x, int y) {
 void qw_image_setcenter(qw_image *img, int x, int y) {
 	img->center.x = x;
 	img->center.y = y;
+}
+
+/* Sets image source rect */
+void qw_image_setsrc(qw_image img, int x, int y, int w, int h) {
+	img.src->x = x;
+	img.src->y = y;
+	img.src->w = w;
+	img.src->h = h;
+}
+
+/* Set image source rect position without modifying size */
+void qw_image_srcpos(qw_image img, int x, int y) {
+	img.src->x = x;
+	img.src->y = y;
+}
+
+/* Sets image destination size */
+void qw_image_setsize(qw_image img, int w, int h) {
+	img.dst->w = w;
+	img.dst->h = h;
 }
 
 /*
