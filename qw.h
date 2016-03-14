@@ -77,6 +77,11 @@ int qw_screen(int width, int height, int fullscreen, const char *title) {
 	return 0;
 }
 
+/* Reset tick_count to 0 */
+void qw_resetticks() {
+	qw_tick_count = 0;
+}
+
 /* Returns if a coordinate is on the screen */
 int qw_onscreen(int x, int y) {
 	return !(x < 0 || y < 0 || x >= qw_width || x >= qw_height);
@@ -177,6 +182,11 @@ void qw_drawrect(int x, int y, int w, int h) {
 /* Draws a line from x1,y1 to x2,y2 */
 void qw_drawline(int x1, int y1, int x2, int y2) {
 	SDL_RenderDrawLine(qw_renderer, x1, y1, x2, y2);
+}
+
+/* Draws a circle centered at x,y with radius r */
+void qw_drawcircle(int x, int y, int r) {
+	circleRGBA(qw_renderer, x, y, r, qw_rgba_red, qw_rgba_green, qw_rgba_blue, qw_rgba_alpha);
 }
 
 /*************************\
@@ -284,12 +294,30 @@ void qw_imagerotation(qw_image *img, double deg) {
 	img->angle = deg;
 }
 
+/* Resets image rotation and flip */
+void qw_resetimage(qw_image *img) {
+	img->flip = SDL_FLIP_NONE;
+	img->angle = 0.f;
+}
+
 /* Flips image, x and y can both be either 0 or 1 */
 void qw_flipimage(qw_image *img, int x, int y) {
 	if (x)
 		img->flip ^= SDL_FLIP_HORIZONTAL;	
 	if (y)
 		img->flip ^= SDL_FLIP_VERTICAL;
+}
+
+/* Sets image flip, x and y can be either 0 (no flip) or 1 (horizontal/vertical flip) */
+void qw_image_setflip(qw_image *img, int x, int y) {
+	if (x && y)
+		img->flip = SDL_FLIP_HORIZONTAL | SDL_FLIP_VERTICAL;
+	else if (x && !y)
+		img->flip = SDL_FLIP_HORIZONTAL;
+	else if (!x && y)
+		img->flip = SDL_FLIP_VERTICAL;
+	else if (!x && !y)
+		img->flip = SDL_FLIP_NONE;
 }
 
 /* Sets center point of qw_image used for rotation */
@@ -325,6 +353,15 @@ void qw_image_setsize(qw_image img, int w, int h) {
 /* Writes string to x,y */
 void qw_write(const char *str, int x, int y) {
 	stringRGBA(qw_renderer, x, y, str, qw_rgba_red, qw_rgba_green, qw_rgba_blue, qw_rgba_alpha);
+}
+
+/*
+ * MATH
+ */
+
+/* Returns distance between two points */
+float qw_distance(int x0, int y0, int x1, int y1) {
+	return sqrt( (x1 - x0)*(x1 - x0) + (y1 - y0)*(y1 - y0) );
 }
 
 #endif
