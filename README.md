@@ -39,7 +39,7 @@ qw_tick_count | unsigned long long | Number of frames since QW started its main 
 ##### qw_running()
 > Execute main loop, returns true if qw is running
 ```c
-qw_screen(640, 480, 0, "Quick Window");
+qw_screen(640, 480, 0, "Quick Window");  
 
 while (qw_running()) {
 	qw_color(200, 100, 100, 255);
