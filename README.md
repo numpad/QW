@@ -15,7 +15,9 @@ qw_tick_count | unsigned long long | Number of frames since QW started its main 
 ##### qw_quit()
 > Quits the application
 
-##### `qw_screen(int width, int height, int fullscreen, const char *title)`
+##### ```c
+qw_screen(int width, int height, int fullscreen, const char *title)
+```
 > Create and open a window
 
 ##### qw_resetticks()
