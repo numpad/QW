@@ -51,4 +51,11 @@ while (qw_running()) {
 qw_quit();
 ```
 
-##### qw_
+##### qw_keydown(int **key**)
+> Returns if **key** is down
+
+```c
+if (qw_keydown(QW_KEY(LEFT))) {
+	// Move the player left
+}
+```
