@@ -4,7 +4,7 @@
 
  Variable | Type | Description
 ----------|------|-------------
-qw_width, qw_height | int | Size of the current window
+```c qw_width, qw_height``` | int | Size of the current window
 qw_window | SDL_Window | SDL_Window managed by QW
 qw_renderer | SDL_Renderer | SDL_Renderer managed by QW
 qw_mousex, qw_mousey | int | Mouseposition relative to window
