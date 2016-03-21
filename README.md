@@ -59,3 +59,71 @@ if (qw_keydown(QW_KEY(LEFT))) {
 	// Move the player left
 }
 ```
+
+##### qw_getmouse(int **\*x**, int **\*y**)
+> Writes mouse x and y to *&x*, *&y*
+> __Deprecated! Use *qw_mousex* and *qw_mousey*__
+
+##### qw_mousedown(int **button**)
+> Returns if mouse**button** is down
+
+##### qw_color(Uint8 **r**, Uint8 **g**, Uint8 **b**, Uint8 **a**)
+> Sets color for drawing
+
+##### qw_drawpixel(int **x**, int **y**)
+> Draws pixel at **x**,**y**
+
+##### qw_fillrect(int **x**, int **y**, int **w**, int **h**)
+> Draws a filled rectangle at **x**,**y** with size **w**,**h**
+
+##### qw_drawrect(int **x**, int **y**, int **w**, int **h**)
+> Draws a rectangle at **x**,**y** with size **w**,**h**
+
+##### qw_drawline(int **x1**, int **y1**, int **x2**, int **y2**)
+> Draws a line from **x1**,**y1** to **x2**,**y2**
+
+##### qw_drawcircle(int **x**, int **y**, int **r**)
+> Draws a circle around **x**,**y** with radius **r**
+
+##### qw_loadimage(const char **\*fn**)
+> Returns a *qw_image* read from filename **fn**
+
+##### qw_destroyimage(qw_image **img**)
+> Frees all resources taken by **img**
+
+##### qw_drawimage(qw_image **img**)
+> Draws **img**
+
+##### qw_moveimage(qw_image **img**, int **dx**, int **dy**)
+> Moves **img** position **dx**,**dy** pixels
+
+##### qw_placeimage(qw_image **img**, int **x**, int **y**)
+> Sets **img** position to **x**,**y**
+
+##### qw_imagewidth(qw_image **img**)
+> Returns width of **img**
+
+##### qw_imageheight(qw_image **img**)
+> Returns height of **img**
+
+##### qw_imagerotate(qw_image **\*img**, double **deg**)
+> Rotates **img** **deg** degrees clockwise
+
+##### qw_imagerotation(qw_image **\*img**, double **deg)
+> Sets **img** rotation to **deg** degrees
+
+##### qw_resetimage(qw_image **\*img**)
+> Resets **img** rotation and flip
+
+##### qw_flipimage(qw_image **\*img**, int **x**, int **y**)
+> Flips **img** horizontally if **x**, vertically if **y** is true
+
+##### qw_image_setflip(qw_image **\*img**, int **x**, int **y**)
+> Set **img** flip, resets all previous flips!
+
+##### qw_write(const char **\*str**, int **x**, int **y**)
+> Writes **str** at position **x**,**y** to screen
+
+##### qw_distance(int **x0**, int **y0**, int **x1**, int **y1**)
+> Returns distance between **x0**,**y0** and **x1**,**y1**
+
