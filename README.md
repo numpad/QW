@@ -85,6 +85,9 @@ if (qw_keydown(QW_KEY(LEFT))) {
 ##### qw_drawcircle(int **x**, int **y**, int **r**)
 > Draws a circle around **x**,**y** with radius **r**
 
+##### qw_fillcircle(int **x**, int **y**, int **r**)
+> Draws a filled circle around **x**,**y** with radius **r**
+
 ##### qw_loadimage(const char **\*fn**)
 > Returns a *qw_image* read from filename **fn**
 
