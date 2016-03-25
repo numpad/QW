@@ -20,6 +20,14 @@ const Uint8 *qw_keys;
 Uint32 qw_mouse;
 int qw_mousex, qw_mousey, qw_mousex_last, qw_mousey_last;
 int qw_mousex_next, qw_mousey_next;
+float qw_renderer_scalex, qw_renderer_scaley;
+
+#define qw_mousex_scaled (qw_mousex / qw_renderer_scalex)
+#define qw_mousey_scaled (qw_mousey / qw_renderer_scaley)
+
+#define QW_MOUSE_LEFT SDL_BUTTON_LEFT
+#define QW_MOUSE_MIDDLE SDL_BUTTON_MIDDLE
+#define QW_MOUSE_RIGHT SDL_BUTTON_RIGHT
 
 unsigned long long qw_tick_count;
 int qw_is_running;
@@ -35,10 +43,12 @@ void qw_quit() {
 	SDL_Quit();
 }
 
-/* Create Window and Renderer */
-int qw_screen(int width, int height, int fullscreen, const char *title) {
-	qw_width = width;
-	qw_height = height;
+/* Create scaled Window and Renderer */
+int qw_screen_scaled(int width, int height, int fullscreen, const char *title, float scale_x, float scale_y) {
+	qw_renderer_scalex = scale_x;
+	qw_renderer_scaley = scale_y;
+	qw_width = (float)width / scale_x;
+	qw_height = (float)height / scale_y;
 	qw_screen_rect = (SDL_Rect) { 0, 0, qw_width, qw_height };
 
 	/* Try initializing SDL */
@@ -72,9 +82,19 @@ int qw_screen(int width, int height, int fullscreen, const char *title) {
 		printf("SDL_CreateRenderer failed! %s\n", SDL_GetError());
 		return 2;
 	}
+	
+	/* Apply render scale */
+	if (scale_x != 1.0 && scale_y != 1.0)
+		SDL_RenderSetScale(qw_renderer, scale_x, scale_y);
 
 	qw_is_running = 1;
 	return 0;
+}
+
+
+/* Create Window and Renderer */
+int qw_screen(int width, int height, int fullscreen, const char *title) {
+	return qw_screen_scaled(width, height, fullscreen, title, 1.0, 1.0);
 }
 
 /* Reset tick_count to 0 */
@@ -148,7 +168,6 @@ int qw_mousedown(int button) {
 	return qw_mouse & SDL_BUTTON(button);
 }
 
-
 /*
  * DRAWING AND GRAPHICS FUNCTIONS
  */
@@ -187,6 +206,11 @@ void qw_drawline(int x1, int y1, int x2, int y2) {
 /* Draws a circle centered at x,y with radius r */
 void qw_drawcircle(int x, int y, int r) {
 	circleRGBA(qw_renderer, x, y, r, qw_rgba_red, qw_rgba_green, qw_rgba_blue, qw_rgba_alpha);
+}
+
+/* Draws a circle centered at x,y with radius r */
+void qw_fillcircle(int x, int y, int r) {
+	filledCircleRGBA(qw_renderer, x, y, r, qw_rgba_red, qw_rgba_green, qw_rgba_blue, qw_rgba_alpha);
 }
 
 /*************************\
