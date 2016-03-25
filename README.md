@@ -1,5 +1,12 @@
 # QuickWindow
 
+## 1. Using QW
+ 1. `#include "qw.h"` in your project
+ 2. Use a C99-compatible compiler
+ 3. Link against SDL2, SDL2_image, SDL2_gfx and libm
+
+## 2. Documentation
+
 ### Global Variables
 
  Variable | Type | Description
@@ -11,6 +18,8 @@ qw_mousex, qw_mousey | int | Mouseposition relative to window
 qw_mousex_last, qw_mousey_last | int | Mouseposition from previous frame
 qw_mousex_next, qw_mousey_next | int | Direction the mouse is moving
 qw_tick_count | unsigned long long | Number of frames since QW started its main loop
+
+### Functions
 
 ##### qw_quit()
 > Quits the application
