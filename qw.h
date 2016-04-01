@@ -7,6 +7,7 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL2_gfxPrimitives.h>
 
+typedef SDL_Scancode QW_Key;
 #define QW_KEY(a) SDL_SCANCODE_##a
 
 #define QW_RENDERER_FLAGS (SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC)
