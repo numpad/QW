@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL2_gfxPrimitives.h>
 
 typedef SDL_Scancode QW_Key;
@@ -39,6 +40,7 @@ int qw_rgba_red, qw_rgba_green, qw_rgba_blue, qw_rgba_alpha;
 void qw_quit() {
 	qw_is_running = 0;
 	
+	Mix_CloseAudio();
 	SDL_DestroyRenderer(qw_renderer);
 	SDL_DestroyWindow(qw_window);
 	SDL_Quit();
@@ -58,20 +60,36 @@ int qw_screen_scaled(int width, int height, int fullscreen, const char *title, f
 		SDL_Quit();
 		return 1;
 	}
-	
+
+	if (IMG_Init(IMG_INIT_PNG) < 0) {
+		printf("IMG_Init failed! %s\n", IMG_GetError());
+		SDL_Quit();
+		return 1;
+	}
+
+	if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 4096) < 0) {
+		printf("Mix_OpenAudio failed! %s\n", Mix_GetError());
+		SDL_Quit();
+		return 1;
+	}
+
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 16);
+
 	/* Quit SDL when application exits */
 	atexit(qw_quit);
-	
+
 	Uint32 windowflags = SDL_WINDOW_SHOWN;
 	if (fullscreen) {
 		windowflags |= SDL_WINDOW_FULLSCREEN;
 	}
 
+
 	/* Create window */
 	qw_window = SDL_CreateWindow(title,
-								 SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-								 width, height,
-								 windowflags);
+			SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+			width, height,
+			windowflags);
 	if (qw_window == NULL) {
 		printf("SDL_CreateWindow failed! %s\n", SDL_GetError());
 		return 2;
@@ -83,7 +101,7 @@ int qw_screen_scaled(int width, int height, int fullscreen, const char *title, f
 		printf("SDL_CreateRenderer failed! %s\n", SDL_GetError());
 		return 2;
 	}
-	
+
 	/* Apply render scale */
 	if (scale_x != 1.0 && scale_y != 1.0)
 		SDL_RenderSetScale(qw_renderer, scale_x, scale_y);
@@ -105,7 +123,7 @@ void qw_resetticks() {
 
 /* Returns if a coordinate is on the screen */
 int qw_onscreen(int x, int y) {
-	return !(x < 0 || y < 0 || x >= qw_width || x >= qw_height);
+	return !(x < 0 || y < 0 || x >= qw_width || y >= qw_height);
 }
 
 /* Clears the screen with color r,g,b */
@@ -134,14 +152,16 @@ int qw_running() {
 	/* Give cpu some time to rest */
 	SDL_Delay(5);
 	++qw_tick_count;
-	
+
 	/* Handle events */
 	SDL_Event event;
 	if (SDL_PollEvent(&event)) {
 		if (event.type == SDL_QUIT)
 			qw_is_running = 0;
+		else
+			SDL_PushEvent(&event);
 	}
-	
+
 	/* Read keys */
 	qw_mousex_last = qw_mousex;
 	qw_mousey_last = qw_mousey;
@@ -204,6 +224,10 @@ void qw_drawline(int x1, int y1, int x2, int y2) {
 	SDL_RenderDrawLine(qw_renderer, x1, y1, x2, y2);
 }
 
+void qw_thickline(int x1, int y1, int x2, int y2, int width) {
+	thickLineRGBA(qw_renderer, x1, y1, x2, y2, width, qw_rgba_red, qw_rgba_green, qw_rgba_blue, qw_rgba_alpha);
+}
+
 /* Draws a circle centered at x,y with radius r */
 void qw_drawcircle(int x, int y, int r) {
 	circleRGBA(qw_renderer, x, y, r, qw_rgba_red, qw_rgba_green, qw_rgba_blue, qw_rgba_alpha);
@@ -216,7 +240,7 @@ void qw_fillcircle(int x, int y, int r) {
 
 /*************************\
  * IMAGE LOADING/DRAWING *
-\*************************/
+ \*************************/
 
 /*
  * Image holding information:
@@ -226,9 +250,9 @@ void qw_fillcircle(int x, int y, int r) {
  */
 typedef struct {
 	SDL_Rect *src,
-	         *dst;
+			 *dst;
 	SDL_Texture *texture;
-	
+
 	double angle;
 	SDL_RendererFlip flip;
 	SDL_Point center;
@@ -244,41 +268,60 @@ void qw_destroyimage(qw_image img) {
 /* Load qw_image from filename */
 qw_image qw_loadimage(const char *fn) {
 	SDL_Surface *img_s = IMG_Load(fn);
-	
+
 	/* image loading failed? */
 	if (!img_s) {
 		printf("IMG_Load: %s\n", IMG_GetError());
 		return (qw_image){NULL, NULL, NULL};
 	}
-	
+
 	/* Allocate memory for src&dst rects and load rgba data from sdl_surface img_s */
 	qw_image img = {
 		.texture = SDL_CreateTextureFromSurface(qw_renderer, img_s),
 		.src = malloc(sizeof(SDL_Rect)),
 		.dst = malloc(sizeof(SDL_Rect))
 	};
-	
+
 	/* src rect: full image by default */
 	img.src->x = 0;
 	img.src->y = 0;
 	img.src->w = img_s->w;
 	img.src->h = img_s->h;
-	
+
 	/* dst rect: full image by default */
 	img.dst->x = 0;
 	img.dst->y = 0;
 	img.dst->w = img_s->w;
 	img.dst->h = img_s->h;
-	
+
 	img.angle = 0.0;
 	img.flip = SDL_FLIP_NONE;
 	img.center = (SDL_Point) {
 		.x = img.dst->w / 2,
-		.y = img.dst->h / 2
+			.y = img.dst->h / 2
 	};
 
 	SDL_FreeSurface(img_s);
 	return img;
+}
+
+void qw_image_colormod(qw_image img, unsigned char r, unsigned char g, unsigned char b) {
+	SDL_SetTextureColorMod(img.texture, r, g, b);
+}
+
+/* draws `img` at x,y with size w,h from srcx,srcy to srcx+srcw,srcy+srch */
+void qw_drawimage_quad(qw_image img, int x, int y, int w, int h, int srcx, int srcy, int srcw, int srch) {
+	img.dst->x = x;
+	img.dst->y = y;
+	img.dst->w = w;
+	img.dst->h = h;
+
+	img.src->x = srcx;
+	img.src->y = srcy;
+	img.src->w = srcw;
+	img.src->h = srch;
+	
+	SDL_RenderCopy(qw_renderer, img.texture, img.src, img.dst);
 }
 
 /* Draws qw_image to screen */
@@ -371,6 +414,25 @@ void qw_image_setsize(qw_image img, int w, int h) {
 	img.dst->h = h;
 }
 
+/* Scales image destination size */
+void qw_image_scalesize(qw_image img, float w, float h) {
+	img.dst->w = (float)img.dst->w * w;
+	img.dst->h = (float)img.dst->h * h;
+}
+
+qw_image qw_backgroundimage;
+/* Loads a default background */
+void qw_loadbackground(const char *fn) {
+	qw_backgroundimage = qw_loadimage(fn);
+	qw_placeimage(qw_backgroundimage, 0, 0);
+}
+
+/* Renders the background */
+void qw_background() {
+	qw_drawimage(qw_backgroundimage);
+}
+
+
 /*
  * GFX PRIMITIVES
  */
@@ -378,6 +440,37 @@ void qw_image_setsize(qw_image img, int w, int h) {
 /* Writes string to x,y */
 void qw_write(const char *str, int x, int y) {
 	stringRGBA(qw_renderer, x, y, str, qw_rgba_red, qw_rgba_green, qw_rgba_blue, qw_rgba_alpha);
+}
+
+/*
+ * SOUNDS
+ */
+
+typedef struct {
+	Mix_Chunk *sound;
+} qw_sound;
+
+/* Loads a sound */
+qw_sound qw_loadsound(const char *fn) {
+	qw_sound snd = (qw_sound) {
+		.sound = Mix_LoadWAV(fn)
+	};
+
+	if (snd.sound == NULL) {
+		printf("Failed loading sound '%s'!\n", fn);
+	}
+
+	return snd;
+}
+
+/* Frees memory taken by sound */
+void qw_deletesound(qw_sound *snd) {
+	Mix_FreeChunk(snd->sound);
+}
+
+/* Play sound */
+void qw_playsound(qw_sound snd) {
+	Mix_PlayChannel(-1, snd.sound, 0);
 }
 
 /*
